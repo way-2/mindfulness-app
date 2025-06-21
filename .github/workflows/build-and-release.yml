@@ -29,7 +29,8 @@ jobs:
         run: npm install --force # Use --force if you encounter peer dependency issues
 
       - name: Install EAS CLI
-        run: npm install -g eas-cli
+        # Ensure the absolute latest EAS CLI is installed to rule out versioning issues.
+        run: npm install -g eas-cli@latest
 
       - name: Install JQ
         # jq is a lightweight and flexible command-line JSON processor, needed to parse EAS build output.
@@ -42,37 +43,40 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Pass the token as an environment variable
 
-      - name: Build Android APK with EAS (Cloud Build) and Get Build ID
+      - name: Build Android APK with EAS (Cloud Build) and Get Build URL
         id: eas_build # Add an ID to reference this step's outputs
         # --json: Outputs build information in JSON format.
-        # We pipe the output to jq to extract the build ID directly.
-        # The build ID is then set as a step output.
+        # We pipe the output to jq to extract the `artifacts.buildUrl`.
+        # The build URL is then set as a step output.
         run: |
           BUILD_JSON=$(eas build --platform android --profile production --non-interactive --json)
-          BUILD_ID=$(echo "$BUILD_JSON" | jq -r '.[0].id')
-          if [ -z "$BUILD_ID" ]; then
-            echo "Error: Could not extract build ID from EAS build output."
+          BUILD_URL=$(echo "$BUILD_JSON" | jq -r '.[0].artifacts.buildUrl')
+          if [ -z "$BUILD_URL" ]; then
+            echo "Error: Could not extract build URL from EAS build output."
             echo "EAS Build Output:"
             echo "$BUILD_JSON"
             exit 1
           fi
-          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
-          echo "Extracted Build ID: $BUILD_ID"
+          echo "build_url=$BUILD_URL" >> "$GITHUB_OUTPUT"
+          echo "Extracted Build URL: $BUILD_URL"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Ensure EAS build also has access to the token
 
-      - name: Download Built APK
-        # This step uses the build_id from the previous step's output.
+      - name: Download Built APK via URL
+        # This step uses the build_url from the previous step's output to directly download the APK.
         run: |
-          BUILD_ID="${{ steps.eas_build.outputs.build_id }}"
-          if [ -z "$BUILD_ID" ]; then
-            echo "Error: Build ID is empty. Cannot download APK."
+          BUILD_URL="${{ steps.eas_build.outputs.build_url }}"
+          if [ -z "$BUILD_URL" ]; then
+            echo "Error: Build URL is empty. Cannot download APK."
             exit 1
           fi
-          echo "Downloading APK for Build ID: $BUILD_ID"
-          eas build:download "$BUILD_ID" --output app.apk
+          echo "Downloading APK from URL: $BUILD_URL"
+          # Use curl to download the APK.
+          # -L: Follow redirects.
+          # -o app.apk: Save the downloaded file as app.apk.
+          curl -L -o app.apk "$BUILD_URL"
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Still good to have, though curl doesn't directly use it
 
       - name: Get tag name
         id: get_tag
