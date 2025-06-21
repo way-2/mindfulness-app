@@ -1,29 +1,26 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
+import { useMemo } from "react";
+import { useColorScheme } from "react-native";
+import { MD3DarkTheme, MD3LightTheme, Provider } from "react-native-paper";
+import CustomBottomTabNavigator from './components/BottomTabNavigation';
+import { DatabaseProvider } from './context/DatabaseContext';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  const colorScheme = useColorScheme();
+  const { theme } = useMaterial3Theme();
+
+  const paperTheme = useMemo(
+    () =>
+      colorScheme === 'dark' ? { ...MD3DarkTheme, colors: theme.dark } : { ...MD3LightTheme, colors: theme.light },
+    [colorScheme, theme]
+  );
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <DatabaseProvider>
+      <Provider theme={paperTheme}>
+        <CustomBottomTabNavigator />
+      </Provider>
+    </DatabaseProvider>
   );
 }
