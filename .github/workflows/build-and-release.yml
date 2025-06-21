@@ -31,6 +31,10 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
+      - name: Install JQ
+        # jq is a lightweight and flexible command-line JSON processor, needed to parse EAS build output.
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Login to Expo (via environment variable)
         # EAS CLI automatically picks up EXPO_TOKEN from environment variables.
         # We use 'eas whoami' to verify successful authentication.
@@ -38,14 +42,29 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Pass the token as an environment variable
 
-      - name: Build Android APK with EAS
-        # --platform android: Specifies to build for Android.
-        # --profile production: Uses the 'production' build profile defined in eas.json.
-        # --non-interactive: Runs the command without prompting for user input.
-        # --output=app.apk: Specifies the local filename for the output APK.
-        run: eas build --platform android --profile production --non-interactive --output=app.apk
+      - name: Build Android APK with EAS (Cloud Build)
+        id: eas_build # Add an ID to reference this step's outputs
+        # --json: Outputs build information in JSON format, which we'll parse to get the build ID.
+        # Removed --output as it's only for local builds.
+        run: |
+          BUILD_COMMAND_OUTPUT=$(eas build --platform android --profile production --non-interactive --json)
+          echo "build_output=$BUILD_COMMAND_OUTPUT" >> $GITHUB_OUTPUT
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Ensure EAS build also has access to the token
+
+      - name: Download Built APK
+        # This step parses the build ID from the previous step's output and downloads the APK.
+        run: |
+          BUILD_ID=$(echo '${{ steps.eas_build.outputs.build_output }}' | jq -r '.[0].id')
+          if [ -z "$BUILD_ID" ]; then
+            echo "Error: Could not extract build ID from EAS build output."
+            exit 1
+          fi
+          echo "Extracted Build ID: $BUILD_ID"
+          # Download the APK artifact using the extracted build ID
+          eas build:download $BUILD_ID --output app.apk
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Get tag name
         id: get_tag
