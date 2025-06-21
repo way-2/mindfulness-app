@@ -31,10 +31,12 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      - name: Login to Expo
-        # This step uses your Expo API token from GitHub Secrets.
-        # Make sure you have set EXPO_TOKEN in your repository's secrets.
-        run: eas login --token ${{ secrets.EXPO_TOKEN }}
+      - name: Login to Expo (via environment variable)
+        # EAS CLI automatically picks up EXPO_TOKEN from environment variables.
+        # We use 'eas whoami' to verify successful authentication.
+        run: eas whoami
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Pass the token as an environment variable
 
       - name: Build Android APK with EAS
         # --platform android: Specifies to build for Android.
@@ -42,6 +44,8 @@ jobs:
         # --non-interactive: Runs the command without prompting for user input.
         # --output=app.apk: Specifies the local filename for the output APK.
         run: eas build --platform android --profile production --non-interactive --output=app.apk
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Ensure EAS build also has access to the token
 
       - name: Get tag name
         id: get_tag
