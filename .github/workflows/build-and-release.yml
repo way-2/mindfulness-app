@@ -11,6 +11,8 @@ on:
 jobs:
   build_and_release:
     runs-on: ubuntu-latest # Use a Linux runner for the build process
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
