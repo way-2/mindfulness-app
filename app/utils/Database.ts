@@ -1,4 +1,5 @@
 import * as SQLite from "expo-sqlite";
+import { MoodJournalEntry } from "../entities/DatabaseEntities";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -53,12 +54,13 @@ export async function initDatabase() {
     }
     await db.execAsync(`
             CREATE TABLE IF NOT EXISTS mood_journal (
-                id TEXT PRIMARY KEY NOT NULL,
+                id INTEGER PRIMARY KEY NOT NULL,
                 mood TEXT,
                 notes TEXT
             );
         `);
   }
+
 }
 
 export async function setSetting(key: string, value: string) {
@@ -110,4 +112,26 @@ export async function removeReminder(text: string): Promise<string[]> {
     `SELECT text FROM reminders;`
   );
   return results.map((row) => row.text);
+}
+
+export async function addMoodJournalEntry(mood: string, notes: string): Promise<void> {
+  if (!db)
+    throw new Error("Database not initialized. Call initDatabase first.");
+  const id = `${Date.now()}`;
+  console.log(`Adding mood journal entry with ID: ${id}, Mood: ${mood}, Notes: ${notes}`);
+  await db.runAsync(
+    "INSERT INTO mood_journal (id, mood, notes) VALUES (?, ?, ?);",
+    id,
+    mood,
+    notes
+  );
+}
+
+export async function getMoodJournalEntries(): Promise<MoodJournalEntry[]> {
+  if (!db)
+    throw new Error("Database not initialized. Call initDatabase first.");
+  const results = await db.getAllAsync<{ id: number, mood: string, notes: string }>(
+    `SELECT * FROM mood_journal;`
+  );
+  return results;
 }

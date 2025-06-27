@@ -51,3 +51,6 @@ Join our community of developers creating universal apps.
 
 # Chime Sound from 
 https://www.zapsplat.com/music/ui-alert-ping-chime-ring/?registration_redirect=1&item_id=158911
+
+# Icon Reference
+https://pictogrammers.com/library/mdi/

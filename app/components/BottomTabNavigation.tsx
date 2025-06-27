@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { CommonActions } from "@react-navigation/native";
 import { BottomNavigation, Icon } from "react-native-paper";
 import HomeScreen from "../screens/HomeScreen";
+import MoodJournal from "../screens/MoodJournalScreen";
 import SettingScreen from "../screens/SettingsScreen";
 
 const Tab = createBottomTabNavigator();
@@ -57,6 +58,15 @@ export default function CustomBottomTabNavigator() {
         options={{
           tabBarIcon: ({ color }) => (
             <Icon source={'home'} color={color} size={26} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Mood Journal"
+        component={MoodJournal}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <Icon source={'notebook-outline'} color={color} size={26} />
           ),
         }}
       />
