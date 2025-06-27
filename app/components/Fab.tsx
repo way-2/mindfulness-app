@@ -10,7 +10,6 @@ import {
   TextInput,
   useTheme,
 } from "react-native-paper";
-import { addMoodJournalEntry } from "../utils/Database";
 
 const feelings = [
   { icon: "emoticon-excited-outline", label: "Excited" },
@@ -20,7 +19,7 @@ const feelings = [
   { icon: "emoticon-angry-outline", label: "Angry" },
 ];
 
-export default function Fab() {
+export default function Fab({onAddEntry}) {
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
   const [selectedFeeling, setSelectedFeeling] = useState(null);
@@ -35,8 +34,8 @@ export default function Fab() {
   };
 
   const handleAdd = () => {
-    if (selectedFeeling) {
-      addMoodJournalEntry(selectedFeeling, notes);
+    if (selectedFeeling && onAddEntry) {
+      onAddEntry({ feeling: selectedFeeling, notes });
     }
     closeModal();
   };

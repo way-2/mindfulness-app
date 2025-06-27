@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Card, Icon, Text, useTheme } from "react-native-paper";
-import { getMoodJournalEntries } from "../utils/Database";
 
 const moodToIcon: Record<string, string> = {
   Excited: "emoticon-excited-outline",
@@ -20,33 +19,27 @@ function formatDate(ts: number) {
   return `${year}-${month}-${day}`;
 }
 
-export default function MoodJournalCalendar() {
+export default function MoodJournalCalendar({entries}) {
   const theme = useTheme();
   const [markedDates, setMarkedDates] = useState({});
   const [entriesByDate, setEntriesByDate] = useState<Record<string, any[]>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchEntries = async () => {
-      const entries = await getMoodJournalEntries(); // [{date: millis, mood, notes, ...}, ...]
-      const marks: Record<string, any> = {};
-      const byDate: Record<string, any[]> = {};
-      entries.forEach((entry) => {
-        const dateStr = formatDate(entry.id);
-        // Mark the date
-        marks[dateStr] = {
-          marked: true,
-          dotColor: theme.colors.primary,
-        };
-        // Group entries by date
-        if (!byDate[dateStr]) byDate[dateStr] = [];
-        byDate[dateStr].push(entry);
-      });
-      setMarkedDates(marks);
-      setEntriesByDate(byDate);
-    };
-    fetchEntries();
-  }, [theme.colors.primary]);
+    const marks: Record<string, any> = {};
+    const byDate: Record<string, any[]> = {};
+    entries.forEach((entry) => {
+      const dateStr = formatDate(entry.id);
+      marks[dateStr] = {
+        marked: true,
+        dotColor: theme.colors.primary,
+      };
+      if (!byDate[dateStr]) byDate[dateStr] = [];
+      byDate[dateStr].push(entry);
+    });
+    setMarkedDates(marks);
+    setEntriesByDate(byDate);
+  }, [entries, theme.colors.primary]);
 
   // Highlight selected date
   const calendarMarkedDates = {
