@@ -1,29 +1,29 @@
-import * as SQLite from 'expo-sqlite';
+import * as SQLite from "expo-sqlite";
 
 let db: SQLite.SQLiteDatabase | null = null;
 
 export async function initDatabase() {
-    if (!db) {
-        db = await SQLite.openDatabaseAsync('mindful.db');
-        await db.execAsync(`
+  if (!db) {
+    db = await SQLite.openDatabaseAsync("mindful.db");
+    await db.execAsync(`
             CREATE TABLE IF NOT EXISTS settings (
                 id TEXT PRIMARY KEY NOT NULL,
                 value TEXT
             );
         `);
 
-        // Try to create the reminders table and check if it was just created
-        const result = await db.getFirstAsync<{ count: number }>(
-            `SELECT count(*) as count FROM sqlite_master WHERE type='table' AND name='reminders';`
-        );
-        if (!result || result.count === 0) {
-            await db.execAsync(`
+    // Try to create the reminders table and check if it was just created
+    const result = await db.getFirstAsync<{ count: number }>(
+      `SELECT count(*) as count FROM sqlite_master WHERE type='table' AND name='reminders';`
+    );
+    if (!result || result.count === 0) {
+      await db.execAsync(`
                 CREATE TABLE IF NOT EXISTS reminders (
                     id INTEGER PRIMARY KEY NOT NULL,
                     text TEXT
                 );
             `);
-            await db.execAsync(`
+      await db.execAsync(`
                 INSERT INTO reminders (text) VALUES ('Pause. Breathe. Be.');
                 INSERT INTO reminders (text) VALUES ('Just a gentle nudge to tune into the present moment.');
                 INSERT INTO reminders (text) VALUES ('Take a mindful minute for yourself.');
@@ -50,33 +50,64 @@ export async function initDatabase() {
                 INSERT INTO reminders (text) VALUES ('Just a reminder to be present with yourself.');
                 INSERT INTO reminders (text) VALUES ('Find your stillness in the midst of it all.');
             `);
-        }
-        await db.execAsync(`
+    }
+    await db.execAsync(`
             CREATE TABLE IF NOT EXISTS mood_journal (
                 id TEXT PRIMARY KEY NOT NULL,
-                mood TEXT
+                mood TEXT,
                 notes TEXT
             );
         `);
-    }
+  }
 }
 
 export async function setSetting(key: string, value: string) {
-    if (!db) throw new Error('Database not initialized. Call initDatabase first.');
-    await db.runAsync(
-        `INSERT OR REPLACE INTO settings (id, value) VALUES (?, ?);`
-        , key, value
-    );
+  if (!db)
+    throw new Error("Database not initialized. Call initDatabase first.");
+  await db.runAsync(
+    `INSERT OR REPLACE INTO settings (id, value) VALUES (?, ?);`,
+    key,
+    value
+  );
 }
 
 export async function getSetting(key: string): Promise<string | null> {
-    if (!db) throw new Error('Database not initialized. Call initDatabase first.');
-    const result = await db.getFirstAsync<{value: string}>(`SELECT value FROM settings WHERE id = ?;`, key);
-    return result?.value ?? null;
+  if (!db)
+    throw new Error("Database not initialized. Call initDatabase first.");
+  const result = await db.getFirstAsync<{ value: string }>(
+    `SELECT value FROM settings WHERE id = ?;`,
+    key
+  );
+  return result?.value ?? null;
 }
 
 export async function getAllReminders(): Promise<string[]> {
-    if (!db) throw new Error('Database not initialized. Call initDatabase first.');
-    const results = await db.getAllAsync<{ text: string }>(`SELECT text FROM reminders;`);
-    return results.map(row => row.text);
+  if (!db)
+    throw new Error("Database not initialized. Call initDatabase first.");
+  const results = await db.getAllAsync<{ text: string }>(
+    `SELECT text FROM reminders;`
+  );
+  return results.map((row) => row.text);
+}
+
+export async function addReminder(text: string): Promise<string[]> {
+  if (text.trim().length === 0)
+    throw new Error("Invalid reminder text. It cannot be empty.");
+  if (!db)
+    throw new Error("Database not initialized. Call initDatabase first.");
+  await db.runAsync("INSERT INTO reminders (text) VALUES (?);", text.trim());
+  const results = await db.getAllAsync<{ text: string }>(
+    `SELECT text FROM reminders;`
+  );
+  return results.map((row) => row.text);
+}
+
+export async function removeReminder(text: string): Promise<string[]> {
+  if (!db)
+    throw new Error("Database not initialized. Call initDatabase first.");
+  await db.runAsync("DELETE FROM reminders WHERE text = ?;", text);
+  const results = await db.getAllAsync<{ text: string }>(
+    `SELECT text FROM reminders;`
+  );
+  return results.map((row) => row.text);
 }

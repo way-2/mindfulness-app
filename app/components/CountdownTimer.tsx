@@ -20,9 +20,9 @@ export default function CountdownTimer() {
   player.loop = true; // Set the player to loop
   player.seekTo(0);
 
-  const defaultMinutes = 0.1;
+  const defaultMinutes = 5;
   const maxMinutes = 60; // Max settable time
-  const minMinutes = 0.1; // Min settable time
+  const minMinutes = 1; // Min settable time
 
   const [initialTimerMinutes, setInitialTimerMinutes] =
     useState(defaultMinutes);

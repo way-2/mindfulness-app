@@ -43,7 +43,6 @@ export async function scheduleNotification(frequency: string) {
 
     await Notifications.scheduleNotificationAsync({
         content: {
-            title: "Mindful Reminder",
             body: phrase
         },
         trigger: {
