@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import Fab from "../components/Fab";
 import MoodJournalCalendar from "../components/MoodJournalCalendar";
@@ -24,9 +24,19 @@ export default function MoodJournal() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <MoodJournalCalendar entries={entries} />
       <Fab onAddEntry={handleAddEntry} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 80,
+    paddingHorizontal: 10,
+  },
+});

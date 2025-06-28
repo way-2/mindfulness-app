@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Card, Icon, Text, useTheme } from "react-native-paper";
 
@@ -54,8 +54,8 @@ export default function MoodJournalCalendar({entries}) {
   };
 
   return (
-    <View style={{ flex: 1, paddingTop: 75 }}>
-        <Text variant="headlineSmall" style={{textAlign: "center"}}>Mood Journal</Text>
+    <View style={styles.container}>
+        <Text variant="headlineSmall" style={styles.headline}>Mood Journal</Text>
       <Calendar
         markedDates={calendarMarkedDates}
         onDayPress={(day) => {
@@ -112,3 +112,13 @@ export default function MoodJournalCalendar({entries}) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1, 
+    paddingTop: 25,
+  },
+  headline: {
+    textAlign: "center"
+  }
+});

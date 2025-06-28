@@ -158,13 +158,9 @@ export default function SettingScreen() {
 
   return (
     <View
-      style={{
-        flex: 1,
-        backgroundColor: theme.colors.background,
-        paddingTop: 40,
-      }}
+      style={[styles.container, {backgroundColor: theme.colors.background,}]}
     >
-      <View style={styles.settingsContent}>
+      <ScrollView>
         {/* Notifications Section */}
         <List.Section title="Notifications">
           <List.Item
@@ -294,7 +290,7 @@ export default function SettingScreen() {
             }
           />
         </List.Section>
-      </View>
+      </ScrollView>
 
       {/* Notification Frequency Selection Dialog (Portal allows it to render on top) */}
       <Portal>
@@ -343,11 +339,10 @@ export default function SettingScreen() {
 }
 
 const styles = StyleSheet.create({
-  settingsContent: {
-    flex: 1,
-    width: "100%",
+  container: {
+    flex: 1, 
+    paddingTop: 80,
     paddingHorizontal: 10,
-    paddingTop: 10,
   },
   dialogListItem: {
     paddingVertical: 10,

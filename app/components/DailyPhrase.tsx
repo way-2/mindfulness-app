@@ -25,16 +25,16 @@ export default function DailyPhrase() {
     fetchPhrases();
   }, [initialized, db]);
 
-  const getPhraseForToday = useCallback(async() => {
+  const getPhraseForToday = useCallback(async () => {
     if (!db || phrases.length === 0) return "No phrase available";
 
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalize to midnight
     const todayStr = today.toISOString();
 
-    const lastUpdate = await getSetting('daily_phrase_last_updated');
+    const lastUpdate = await getSetting("daily_phrase_last_updated");
 
-    const lastPhrase = await getSetting('current_daily_phrase');
+    const lastPhrase = await getSetting("current_daily_phrase");
 
     if (lastUpdate === todayStr && lastPhrase) {
       return lastPhrase; // Return the cached phrase if it exists
@@ -43,8 +43,8 @@ export default function DailyPhrase() {
     const randomIndex = Math.floor(Math.random() * phrases.length);
     const phrase = phrases[randomIndex];
 
-    await setSetting('daily_phrase_last_updated',todayStr);
-    await setSetting('current_daily_phrase',phrase);
+    await setSetting("daily_phrase_last_updated", todayStr);
+    await setSetting("current_daily_phrase", phrase);
     return phrase;
   }, [db, phrases]);
 
@@ -54,8 +54,8 @@ export default function DailyPhrase() {
     const setPhrase = async () => {
       const phrase = await getPhraseForToday();
       setDailyPhrase(phrase);
-    }
-    
+    };
+
     setPhrase();
 
     const now = new Date();
@@ -74,24 +74,19 @@ export default function DailyPhrase() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.content}>
-        <Text variant="headlineLarge" style={styles.headline}>{dailyPhrase}</Text>
-      </View>
+      <Text variant="headlineLarge" style={styles.headline}>
+        {dailyPhrase}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
+    flex: 0.2,
     justifyContent: "center",
-    paddingHorizontal: 20,
-    marginHorizontal: "auto"
   },
   headline: {
     textAlign: "center",
-  }
+  },
 });

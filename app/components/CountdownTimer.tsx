@@ -185,14 +185,12 @@ export default function CountdownTimer() {
 const styles = StyleSheet.create({
   headline: {
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 15,
   },
   timerSection: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    width: "100%",
-    paddingBottom: 20,
   },
   timerCircleContainer: {
     position: "relative", // Allows absolute positioning of children
