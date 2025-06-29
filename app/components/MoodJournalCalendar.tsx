@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Card, Icon, Text, useTheme } from "react-native-paper";
+import relieved_emoticon from "../../assets/images/relieved_emoticon.png";
 
 const moodToIcon: Record<string, string> = {
   Excited: "emoticon-excited-outline",
   Happy: "emoticon-happy-outline",
   Neutral: "emoticon-neutral-outline",
   Sad: "emoticon-sad-outline",
-  Angry: "emoticon-angry-outline",
+  Angry: "emoticon-angry-outline"
 };
 
 function formatDate(ts: number) {
@@ -83,7 +84,7 @@ export default function MoodJournalCalendar({entries}) {
                 style={{ flexDirection: "row", alignItems: "center" }}
               >
                 <Icon
-                  source={moodToIcon[entry.mood] || "emoticon-outline"}
+                  source={moodToIcon[entry.mood] || relieved_emoticon}
                   size={32}
                   color={theme.colors.primary}
                 />

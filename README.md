@@ -54,3 +54,6 @@ https://www.zapsplat.com/music/ui-alert-ping-chime-ring/?registration_redirect=1
 
 # Icon Reference
 https://pictogrammers.com/library/mdi/
+
+# Relieved Icon (meditate)
+https://www.flaticon.com/free-icon/relieved_8376648#

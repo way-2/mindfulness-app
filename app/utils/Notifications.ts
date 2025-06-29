@@ -43,7 +43,8 @@ export async function scheduleNotification(frequency: string) {
 
     await Notifications.scheduleNotificationAsync({
         content: {
-            body: phrase
+            body: phrase,
+            data: { action: "new-mood-journal-entry" }, 
         },
         trigger: {
             type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,

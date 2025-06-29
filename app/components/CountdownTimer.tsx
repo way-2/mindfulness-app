@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Vibration, View } from "react-native";
 import { Button, IconButton, Text, useTheme } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
+import { addMoodJournalEntry } from "../utils/Database";
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
@@ -45,6 +46,9 @@ export default function CountdownTimer() {
         setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
     } else if (isRunning && timeLeft === 0) {
+      // Add entry to mood journal when timer runs out
+      addMoodJournalEntry("Meditation", "Completed a meditation session of " + initialTimerMinutes + " minutes");
+
       setIsRunning(false);
       Vibration.vibrate([500, 500, 500]);
       player.seekTo(0);
