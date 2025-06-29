@@ -158,11 +158,11 @@ export default function SettingScreen() {
 
   return (
     <View
-      style={[styles.container, {backgroundColor: theme.colors.background,}]}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView>
         {/* Notifications Section */}
-        <List.Section title="Notifications">
+        <List.Section title="Settings">
           <List.Item
             title="Enable Notifications"
             description="Turn daily phrase and timer alerts on or off."
@@ -186,11 +186,19 @@ export default function SettingScreen() {
             onPress={handleOpenFrequencyDialog}
             disabled={!notificationsEnabled} // Disable if notifications are off
           />
-        </List.Section>
 
-        <List.Section title="Reminder Management">
-          <View style={{ maxHeight: 300, marginBottom: 16 }}>
-            <ScrollView>
+          <List.Accordion
+            title="Reminder Management"
+            left={(props) => (
+              <List.Icon
+                {...props}
+                icon="bell-plus"
+                style={{ alignContent: "flex-start" }}
+              />
+            )}
+            style={{ backgroundColor: "transparent" }}
+          >
+            <View>
               <DataTable>
                 <DataTable.Row>
                   <DataTable.Cell
@@ -268,8 +276,8 @@ export default function SettingScreen() {
                   </DataTable.Row>
                 ))}
               </DataTable>
-            </ScrollView>
-          </View>
+            </View>
+          </List.Accordion>
         </List.Section>
 
         {/* About Section */}
@@ -340,7 +348,7 @@ export default function SettingScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
+    flex: 1,
     paddingTop: 80,
     paddingHorizontal: 10,
   },

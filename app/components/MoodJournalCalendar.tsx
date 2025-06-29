@@ -100,7 +100,7 @@ export default function MoodJournalCalendar({entries}) {
                     })}
                   </Text>
                   {entry.notes ? (
-                    <Text variant="bodyMedium" style={{ marginTop: 2 }}>
+                    <Text variant="bodyMedium" style={{ marginTop: 2, marginEnd: 35 }}>
                       {entry.notes}
                     </Text>
                   ) : null}
