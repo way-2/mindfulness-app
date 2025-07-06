@@ -1,4 +1,5 @@
 import { useAudioPlayer } from "expo-audio";
+import { activateKeepAwakeAsync, deactivateKeepAwake, useKeepAwake } from 'expo-keep-awake';
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Vibration, View } from "react-native";
 import { Button, IconButton, Text, useTheme } from "react-native-paper";
@@ -31,6 +32,8 @@ export default function CountdownTimer() {
   const [isRunning, setIsRunning] = useState(false);
   const timerIntervalRef = useRef(null); // Ref to hold the interval ID
   const [isSoundPlaying, setIsSoundPlaying] = useState(false);
+  const KEEP_AWAKE_TAG = "meditation-timer";
+  useKeepAwake(KEEP_AWAKE_TAG); // Keep the device awake during meditation
 
   // Reset timeLeft when initialTimerMinutes changes, but only if not running or sound is not playing
   useEffect(() => {
@@ -46,6 +49,7 @@ export default function CountdownTimer() {
         setTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
     } else if (isRunning && timeLeft === 0) {
+      deactivateKeepAwake(KEEP_AWAKE_TAG);
       // Add entry to mood journal when timer runs out
       addMoodJournalEntry("Meditation", "Completed a meditation session of " + initialTimerMinutes + " minutes");
 
@@ -85,6 +89,7 @@ export default function CountdownTimer() {
     } else {
       // Start timer
       setIsRunning(true);
+      activateKeepAwakeAsync(KEEP_AWAKE_TAG);
       if (timeLeft === 0) {
         setTimeLeft(initialTimerMinutes * 60);
       }
