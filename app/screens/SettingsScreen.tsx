@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+import { ReactNativeLegal } from 'react-native-legal';
 import {
   Button,
   DataTable,
@@ -156,6 +157,10 @@ export default function SettingScreen() {
     setSnackbarVisible(true);
   };
 
+function launchNotice() {
+  ReactNativeLegal.launchLicenseListScreen('Open Source Licenses'); // Customize the title
+}
+
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -286,6 +291,12 @@ export default function SettingScreen() {
             title="Version"
             description={version}
             left={() => <List.Icon icon="information" />}
+          />
+          <List.Item
+            title="Open Source Licenses"
+            description="View the open source licenses used in this app."
+            left={() => <List.Icon icon="source-branch" />}
+            onPress={launchNotice} // Opens the license list screen
           />
           <List.Item
             title="Privacy Policy"

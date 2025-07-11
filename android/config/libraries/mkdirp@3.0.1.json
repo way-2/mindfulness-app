@@ -1,0 +1,1 @@
+{"artifactVersion":"3.0.1","description":"Recursively mkdir, like `mkdir -p`","developers":[{"name":"","organisationUrl":""}],"licenses":["MIT_0b77c40bf32e3ac8d23def2346225644c72ab6c30c409b53ec93fa9bad791a1f7f083491b0a4e51a9d636584b65e557d67dfb99d9005dac0cd281caa48b53cbc"],"name":"mkdirp","tag":"","uniqueId":"mkdirp@3.0.1","website":"https://github.com/isaacs/node-mkdirp"}

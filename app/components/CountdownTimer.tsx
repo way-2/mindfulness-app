@@ -54,8 +54,9 @@ export default function CountdownTimer() {
       addMoodJournalEntry("Meditation", "Completed a meditation session of " + initialTimerMinutes + " minutes");
 
       setIsRunning(false);
-      Vibration.vibrate([500, 500, 500]);
+      Vibration.vibrate([500, 500, 500], true);
       player.seekTo(0);
+      player.loop = true;
       player.play();
       setIsSoundPlaying(true);
     }
@@ -67,8 +68,6 @@ export default function CountdownTimer() {
   // Cleanup sound on unmount
   useEffect(() => {
     return () => {
-      player.pause();
-      player.seekTo(0);
       setIsSoundPlaying(false);
     };
   }, [player]);
@@ -79,6 +78,7 @@ export default function CountdownTimer() {
       // Stop sound and reset timer to default
       player.pause();
       player.seekTo(0);
+      Vibration.cancel();
       setIsSoundPlaying(false);
       setInitialTimerMinutes(defaultMinutes);
       setTimeLeft(defaultMinutes * 60);
