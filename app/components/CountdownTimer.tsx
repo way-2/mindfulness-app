@@ -1,12 +1,12 @@
 import { useAudioPlayer } from "expo-audio";
-import { activateKeepAwakeAsync, deactivateKeepAwake, useKeepAwake } from 'expo-keep-awake';
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, Vibration, View } from "react-native";
+import BackgroundService from "react-native-background-actions";
 import { Button, IconButton, Text, useTheme } from "react-native-paper";
 import Svg, { Circle } from "react-native-svg";
 import { addMoodJournalEntry } from "../utils/Database";
 
-const formatTime = (totalSeconds) => {
+const formatTime = (totalSeconds: number) => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes.toString().padStart(2, "0")}:${seconds
@@ -18,89 +18,98 @@ const audioSource = require("../../assets/sounds/zapsplat_multimedia_alert_ping_
 
 export default function CountdownTimer() {
   const theme = useTheme();
-  const player = useAudioPlayer(audioSource); // Initialize audio player with the sound file
-  player.loop = true; // Set the player to loop
-  player.seekTo(0);
+  const player = useAudioPlayer(audioSource);
 
   const defaultMinutes = 5;
-  const maxMinutes = 60; // Max settable time
-  const minMinutes = 1; // Min settable time
+  const maxMinutes = 60;
+  const minMinutes = 1;
 
-  const [initialTimerMinutes, setInitialTimerMinutes] =
-    useState(defaultMinutes);
-  const [timeLeft, setTimeLeft] = useState(defaultMinutes * 60); // in seconds
+  const [initialTimerMinutes, setInitialTimerMinutes] = useState(defaultMinutes);
+  const [timeLeft, setTimeLeft] = useState(defaultMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
-  const timerIntervalRef = useRef(null); // Ref to hold the interval ID
   const [isSoundPlaying, setIsSoundPlaying] = useState(false);
-  const KEEP_AWAKE_TAG = "meditation-timer";
-  useKeepAwake(KEEP_AWAKE_TAG); // Keep the device awake during meditation
 
-  // Reset timeLeft when initialTimerMinutes changes, but only if not running or sound is not playing
+  // Reset timeLeft when initialTimerMinutes changes and timer is not running
   useEffect(() => {
     if (!isRunning && !isSoundPlaying) {
       setTimeLeft(initialTimerMinutes * 60);
     }
   }, [initialTimerMinutes, isRunning, isSoundPlaying]);
 
-  // Timer countdown logic
+  // Cleanup sound on unmount
   useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      timerIntervalRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => prevTime - 1);
-      }, 1000);
-    } else if (isRunning && timeLeft === 0) {
-      deactivateKeepAwake(KEEP_AWAKE_TAG);
-      // Add entry to mood journal when timer runs out
-      addMoodJournalEntry("Meditation", "Completed a meditation session of " + initialTimerMinutes + " minutes");
+    return () => {
+      setIsSoundPlaying(false);
+      player.pause();
+      player.seekTo(0);
+    };
+  }, [player]);
 
+  // Background timer task
+  const backgroundTask = async ({ seconds }: { seconds: number }) => {
+    let remaining = seconds;
+    while (BackgroundService.isRunning() && remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      remaining--;
+      setTimeLeft(remaining);
+    }
+    if (remaining === 0) {
       setIsRunning(false);
       Vibration.vibrate([500, 500, 500], true);
       player.seekTo(0);
       player.loop = true;
       player.play();
       setIsSoundPlaying(true);
+      addMoodJournalEntry(
+        "Meditation",
+        `Completed a meditation session of ${initialTimerMinutes} minutes`
+      );
     }
-    return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    };
-  }, [isRunning, timeLeft, player]);
+    await BackgroundService.stop();
+  };
 
-  // Cleanup sound on unmount
-  useEffect(() => {
-    return () => {
-      setIsSoundPlaying(false);
-    };
-  }, [player]);
-
-  // Start/Stop button logic
+  // Start/Stop/Reset logic
   const handleStartStop = async () => {
-    if (isSoundPlaying) {
-      // Stop sound and reset timer to default
+    if (isRunning) {
+      await BackgroundService.stop();
+      setIsRunning(false);
       player.pause();
       player.seekTo(0);
       Vibration.cancel();
       setIsSoundPlaying(false);
       setInitialTimerMinutes(defaultMinutes);
       setTimeLeft(defaultMinutes * 60);
-    } else if (isRunning) {
-      // Stop timer and reset
-      setIsRunning(false);
-      setTimeLeft(initialTimerMinutes * 60);
+      
     } else {
-      // Start timer
       setIsRunning(true);
-      activateKeepAwakeAsync(KEEP_AWAKE_TAG);
-      if (timeLeft === 0) {
-        setTimeLeft(initialTimerMinutes * 60);
-      }
+      setIsSoundPlaying(false);
+      setTimeLeft(initialTimerMinutes * 60);
+      await BackgroundService.start(backgroundTask, {
+        taskName: "Meditation Timer",
+        taskTitle: "Meditation Timer",
+        taskDesc: `Time left: ${formatTime(initialTimerMinutes * 60)}`,
+        parameters: { seconds: initialTimerMinutes * 60 },
+        taskIcon: { name: "ic_launcher", type: "mipmap" },
+        foregroundServiceType: "specialUse", // For Android 14+
+      } as any);
     }
   };
 
-  // +/- button logic
-  const handleAdjustTime = (amountInMinutes) => {
+  const handleReset = async () => {
+    await BackgroundService.stop();
+    setIsRunning(false);
+    player.pause();
+    player.seekTo(0);
+    Vibration.cancel();
+    setIsSoundPlaying(false);
+    setInitialTimerMinutes(defaultMinutes);
+    setTimeLeft(defaultMinutes * 60);
+  };
+
+  const handleAdjustTime = (amount: number) => {
     if (!isRunning && !isSoundPlaying) {
       setInitialTimerMinutes((prev) => {
-        const newMinutes = prev + amountInMinutes;
+        const newMinutes = prev + amount;
         if (newMinutes < minMinutes) return minMinutes;
         if (newMinutes > maxMinutes) return maxMinutes;
         return newMinutes;
@@ -108,13 +117,11 @@ export default function CountdownTimer() {
     }
   };
 
-  // --- Circular Progress Bar Calculations ---
-  const size = 250; // Diameter of the circle
+  // Circular Progress Bar Calculations
+  const size = 250;
   const strokeWidth = 10;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-
-  // Calculate progress percentage and strokeDashoffset for the progress bar
   const progressPercentage = (timeLeft / (initialTimerMinutes * 60)) * 100;
   const strokeDashoffset =
     circumference - (progressPercentage / 100) * circumference;
@@ -125,7 +132,6 @@ export default function CountdownTimer() {
         <Text variant="headlineSmall" style={styles.headline}>
           Meditation Timer
         </Text>
-        {/* Minus Button */}
         <IconButton
           icon="minus-circle"
           size={50}
@@ -134,21 +140,17 @@ export default function CountdownTimer() {
           disabled={isRunning || initialTimerMinutes <= minMinutes}
           style={styles.adjustButtonLeft}
         />
-
-        {/* SVG Circular Progress Bar */}
         <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          {/* Background Circle */}
           <Circle
-            stroke={theme.colors.onSurfaceVariant} // Color for the background circle
+            stroke={theme.colors.onSurfaceVariant}
             fill="none"
             cx={size / 2}
             cy={size / 2}
             r={radius}
             strokeWidth={strokeWidth}
           />
-          {/* Progress Circle */}
           <Circle
-            stroke={theme.colors.primary} // Color for the progress
+            stroke={theme.colors.primary}
             fill="none"
             cx={size / 2}
             cy={size / 2}
@@ -157,16 +159,12 @@ export default function CountdownTimer() {
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            transform={`rotate(-90 ${size / 2} ${size / 2})`} // Start from top (12 o'clock)
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
           />
         </Svg>
-
-        {/* Timer Text */}
         <Text variant="displayMedium" style={styles.timerText}>
           {formatTime(timeLeft)}
         </Text>
-
-        {/* Plus Button */}
         <IconButton
           icon="plus-circle"
           size={50}
@@ -176,11 +174,9 @@ export default function CountdownTimer() {
           style={styles.adjustButtonRight}
         />
       </View>
-
-      {/* Start/Stop Button */}
       <Button
         mode="contained"
-        onPress={handleStartStop}
+        onPress={isSoundPlaying ? handleReset : handleStartStop}
         style={styles.startButton}
         labelStyle={styles.startButtonLabel}
         icon={isSoundPlaying ? "refresh" : isRunning ? "stop" : "play"}
@@ -202,18 +198,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   timerCircleContainer: {
-    position: "relative", // Allows absolute positioning of children
-    width: 250, // Matches Svg size
-    height: 250, // Matches Svg size
+    position: "relative",
+    width: 250,
+    height: 250,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 30,
   },
   timerText: {
-    position: "absolute", // Position text over the SVG circle
+    position: "absolute",
     top: "55%",
     left: "50%",
-    transform: [{ translateX: -70 }, { translateY: -25 }], // Adjust based on text size to center
+    transform: [{ translateX: -70 }, { translateY: -25 }],
     fontSize: 48,
     fontWeight: "bold",
     letterSpacing: 2,
@@ -221,13 +217,13 @@ const styles = StyleSheet.create({
   adjustButtonLeft: {
     position: "absolute",
     top: 100,
-    left: -80, // Position to the left of the circle
-    zIndex: 1, // Ensure button is clickable above SVG
+    left: -80,
+    zIndex: 1,
   },
   adjustButtonRight: {
     position: "absolute",
     top: 100,
-    right: -80, // Position to the right of the circle
+    right: -80,
     zIndex: 1,
   },
   startButton: {
@@ -237,5 +233,5 @@ const styles = StyleSheet.create({
   },
   startButtonLabel: {
     fontSize: 18,
-  },
+  }
 });
